@@ -23,9 +23,8 @@ class PDF(FPDF):
     def add_chapter(self, title, code_content, output_content):
         self.add_page()
         
-        # 1. Chapter Title (User defined or Filename)
+        # 1. Chapter Title
         self.set_font("courier", 'B', 12)
-        # Draw a line under the title for emphasis
         self.cell(0, 10, title, ln=True, border='B')
         self.ln(5)
         
@@ -83,28 +82,30 @@ def run_code(file_path, language, auto_inputs):
     return "Unsupported Language"
 
 # --- 3. The Web Interface ---
-st.set_page_config(page_title="CodeSync Pro", page_icon="⚡")
+st.set_page_config(page_title="CodeSync Pro - by Faisal Hayat", page_icon="⚡")
 st.title("CodeSync Pro: Batch Processor ⚡")
 
-# --- UI: Configuration Section ---
+# --- UI: Sidebar Configuration ---
 st.sidebar.header("Document Settings")
 
 # 1. Global PDF Title
 user_title = st.sidebar.text_input("Main PDF Title", value="Lab Record Final")
 
-# 2. Page Naming Strategy (New Feature)
+# 2. Page Naming Strategy
 naming_mode = st.sidebar.radio(
     "How should we name the programs?",
     ('Use Original Filename', 'Auto-Numbering (e.g., Assignment 1)')
 )
 
-custom_prefix = "Assignment" # Default
+custom_prefix = "Assignment"
 if naming_mode == 'Auto-Numbering (e.g., Assignment 1)':
     custom_prefix = st.sidebar.text_input("Prefix Name", value="Assignment")
 
 # 3. Auto Inputs
 st.sidebar.markdown("---")
 st.sidebar.header("Execution Settings")
+st.sidebar.info("📱 Mobile Users: Tap the arrow at the top-left to see settings.")
+
 default_input = st.sidebar.text_area(
     "Auto-Input Values", 
     value="10\n20\n", 
@@ -136,16 +137,13 @@ if uploaded_files and st.button("Compile & Generate Lab Record"):
         code_content = uploaded_file.getvalue().decode("utf-8")
         output_content = run_code(file_path, lang, default_input)
         
-        # --- LOGIC: Determine the Chapter Title ---
+        # Title Logic
         if naming_mode == 'Use Original Filename':
             final_chapter_name = f"Source File: {uploaded_file.name}"
         else:
-            # e.g., "Assignment 1", "Assignment 2"
             final_chapter_name = f"{custom_prefix} {i + 1}"
 
-        # Add to PDF
         pdf.add_chapter(final_chapter_name, code_content, output_content)
-        
         progress_bar.progress((i + 1) / len(uploaded_files))
 
     shutil.rmtree("temp_run")
@@ -159,3 +157,15 @@ if uploaded_files and st.button("Compile & Generate Lab Record"):
         file_name="lab_record_compiled.pdf",
         mime="application/pdf"
     )
+
+# --- 4. Footer Section (NEW) ---
+st.divider()
+st.markdown(
+    """
+    <div style='text-align: center; color: grey;'>
+        Built with ❤️ by <strong>Md Faisal Hayat</strong><br>
+        📧 Contact: <a href="mailto:55mdfaisalhayat@gmail.com">55mdfaisalhayat@gmail.com</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
