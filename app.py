@@ -13,10 +13,9 @@ st.set_page_config(
 )
 
 # --- 2. Google Search Console Verification ---
-# We inject the meta tag using two methods to ensure Google sees it.
 verification_code = "iIpXtbxW2ZgJICukZXTEE2C43F4bSskvC7ruq7ceHKE"
 
-# Method A: Direct Head Injection (Primary)
+# Method A: Direct Head Injection
 st.markdown(
     f"""
     <meta name="google-site-verification" content="{verification_code}" />
@@ -24,7 +23,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Method B: Javascript Fallback (Secondary backup)
+# Method B: Javascript Fallback
 components.html(f"""
     <script>
         var meta = document.createElement('meta');
@@ -35,17 +34,27 @@ components.html(f"""
 """, height=0, width=0)
 
 
-# --- 3. Professional Styling (CSS) ---
+# --- 3. Light Mode Styling (CSS) ---
 def set_custom_design():
     st.markdown("""
         <style>
-        /* Main Background & Text */
+        /* 1. Main Background & Text (WHITE MODE) */
         .stApp {
-            background-color: #0E1117;
-            color: #FAFAFA;
+            background-color: #FFFFFF;
+            color: #1F2937; /* Dark Grey Text */
         }
         
-        /* Buttons */
+        /* 2. Headings */
+        h1 {
+            color: #0077B6; /* Strong Blue */
+            font-family: 'Helvetica Neue', sans-serif;
+            font-weight: 700;
+        }
+        h2, h3 {
+            color: #333333;
+        }
+        
+        /* 3. Buttons */
         div.stButton > button {
             background: linear-gradient(45deg, #00B4D8, #0077B6);
             color: white;
@@ -55,23 +64,38 @@ def set_custom_design():
             border-radius: 8px;
             width: 100%;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         div.stButton > button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 180, 216, 0.4);
+            box-shadow: 0 6px 15px rgba(0, 119, 182, 0.3);
         }
 
-        /* Input Fields */
+        /* 4. Input Fields (Light Grey Background) */
         .stTextInput > div > div > input {
-            background-color: #262730;
-            color: white;
+            background-color: #F0F2F6;
+            color: #1F2937;
+            border: 1px solid #D1D5DB;
+        }
+        .stTextArea > div > div > textarea {
+            background-color: #F0F2F6;
+            color: #1F2937;
+            border: 1px solid #D1D5DB;
         }
         
-        /* Footer Divider */
+        /* 5. File Uploader */
+        .stFileUploader {
+            background-color: #F9FAFB;
+            border: 1px dashed #0077B6;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        /* 6. Footer Divider */
         hr {
             margin-top: 30px;
             margin-bottom: 30px;
-            border-color: #262730;
+            border-color: #E5E7EB; /* Light Grey Divider */
         }
         </style>
         """, unsafe_allow_html=True)
@@ -108,7 +132,6 @@ class PDF(FPDF):
         self.set_font("courier", 'B', 10)
         self.cell(0, 5, "CODE:", ln=True)
         self.set_font("courier", size=10)
-        # Latin-1 encoding fixes typical PDF emoji/symbol crashes
         safe_code = code_content.encode('latin-1', 'replace').decode('latin-1')
         self.multi_cell(0, 5, safe_code)
         self.ln(10)
@@ -140,12 +163,10 @@ def run_code(file_path, language, auto_inputs):
             return result.stdout + result.stderr
 
         elif language == "cpp" or language == "c":
-            # Compile logic for C/C++
             exe_name = file_path.replace(".cpp", ".exe").replace(".c", ".exe")
             compile_cmd = ["g++", file_path, "-o", exe_name]
             subprocess.run(compile_cmd, check=True)
             
-            # Run logic
             result = subprocess.run(
                 [exe_name], 
                 input=auto_inputs, 
@@ -156,7 +177,7 @@ def run_code(file_path, language, auto_inputs):
             return result.stdout + result.stderr
             
     except subprocess.TimeoutExpired:
-        return "Error: Execution Timed Out (Check for infinite loops)"
+        return "Error: Execution Timed Out"
     except Exception as e:
         return f"Execution Error: {str(e)}"
     return "Unsupported Language"
@@ -201,35 +222,27 @@ if uploaded_files:
         pdf = PDF(user_title)
         progress_bar = st.progress(0)
         
-        # Temp directory for processing
         if not os.path.exists("temp_run"):
             os.makedirs("temp_run")
 
         try:
             for i, uploaded_file in enumerate(uploaded_files):
-                # Save file locally
                 file_path = os.path.join("temp_run", uploaded_file.name)
                 with open(file_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
                 
-                # Identify Language
                 lang = "python" if uploaded_file.name.endswith(".py") else "cpp"
-                
-                # Run Code
                 code_content = uploaded_file.getvalue().decode("utf-8")
                 output_content = run_code(file_path, lang, default_input)
                 
-                # Determine Chapter Title
                 if naming_mode == 'Use Original Filename':
                     final_chapter_name = f"Source: {uploaded_file.name}"
                 else:
                     final_chapter_name = f"{custom_prefix} {i + 1}"
 
-                # Add to PDF
                 pdf.add_chapter(final_chapter_name, code_content, output_content)
                 progress_bar.progress((i + 1) / len(uploaded_files))
             
-            # Finalize PDF
             pdf_bytes = pdf.output(dest='S').encode('latin-1')
             
             st.success("✅ Success! Your Lab Record is ready.")
@@ -244,7 +257,6 @@ if uploaded_files:
             st.error(f"An error occurred: {e}")
         
         finally:
-            # Cleanup temp files
             if os.path.exists("temp_run"):
                 shutil.rmtree("temp_run")
 
@@ -252,9 +264,9 @@ if uploaded_files:
 st.divider()
 st.markdown(
     """
-    <div style='text-align: center; color: #888;'>
+    <div style='text-align: center; color: #666;'>
         Built with ❤️ by <strong>Md Faisal Hayat</strong><br>
-        📧 Contact: <a href="mailto:55mdfaisalhayat@gmail.com" style="color: #00B4D8; text-decoration: none;">55mdfaisalhayat@gmail.com</a>
+        📧 Contact: <a href="mailto:55mdfaisalhayat@gmail.com" style="color: #0077B6; text-decoration: none;">55mdfaisalhayat@gmail.com</a>
     </div>
     """,
     unsafe_allow_html=True
