@@ -265,9 +265,10 @@ st.divider()
 st.markdown(
     """
     <div style='text-align: center; color: #666;'>
-        Built with ❤️ by <strong>Md Faisal Hayat</strong><br>
+        Created by <strong>Md Faisal Hayat</strong>co-created by <strong>Reyan Ahmed</strong> <br>
         📧 Contact: <a href="mailto:55mdfaisalhayat@gmail.com" style="color: #0077B6; text-decoration: none;">55mdfaisalhayat@gmail.com</a>
     </div>
     """,
     unsafe_allow_html=True
 )
+
